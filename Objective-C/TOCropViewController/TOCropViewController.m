@@ -1,7 +1,7 @@
 //
 //  TOCropViewController.m
 //
-//  Copyright 2015-2024 Timothy Oliver. All rights reserved.
+//  Copyright 2015-2022 Timothy Oliver. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to
@@ -84,6 +84,7 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
         // Set up base view controller behaviour
         self.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
         self.modalPresentationStyle = UIModalPresentationFullScreen;
+        self.automaticallyAdjustsScrollViewInsets = NO;
         self.hidesNavigationBar = true;
         
         // Controller object that handles the transition animation when presenting / dismissing this app
@@ -143,9 +144,7 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
     // so we can manually control the status bar fade out timing
     if (animated) {
         self.inTransition = YES;
-#if TARGET_OS_IOS
         [self setNeedsStatusBarAppearanceUpdate];
-#endif
     }
     
     // If this controller is pushed onto a navigation stack, set flags noting the
@@ -167,12 +166,15 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
         // The title label will fade
         self.titleLabel.alpha = animated ? 0.0f : 1.0f;
     }
+    
+    [self setAspectRatioPreset:TOCropViewControllerAspectRatioPreset5x4 animated:NO];
+    self.aspectRatioLockEnabled = YES;
 
-    // If an initial aspect ratio was set before presentation, set it now once the rest of
-    // the setup will have been done
-    if (self.aspectRatioPreset != TOCropViewControllerAspectRatioPresetOriginal) {
-        [self setAspectRatioPreset:self.aspectRatioPreset animated:NO];
-    }
+//    // If an initial aspect ratio was set before presentation, set it now once the rest of
+//    // the setup will have been done
+//    if (self.aspectRatioPreset != TOCropViewControllerAspectRatioPresetOriginal) {
+//        [self setAspectRatioPreset:self.aspectRatioPreset animated:NO];
+//    }
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -188,9 +190,7 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
     // Now that the presentation animation will have finished, animate
     // the status bar fading out, and if present, the title label fading in
     void (^updateContentBlock)(void) = ^{
-#if TARGET_OS_IOS
         [self setNeedsStatusBarAppearanceUpdate];
-#endif
         self.titleLabel.alpha = 1.0f;
     };
 
@@ -218,10 +218,8 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
     
     // Set the transition flag again so we can defer the status bar
     self.inTransition = YES;
-#if TARGET_OS_IOS
     [UIView animateWithDuration:0.5f animations:^{ [self setNeedsStatusBarAppearanceUpdate]; }];
-#endif
-
+    
     // Restore the navigation controller to its state before we were presented
     if (self.navigationController && self.hidesNavigationBar) {
         [self.navigationController setNavigationBarHidden:self.navigationBarHidden animated:animated];
@@ -235,9 +233,7 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
     
     // Reset the state once the view has gone offscreen
     self.inTransition = NO;
-#if TARGET_OS_IOS
     [self setNeedsStatusBarAppearanceUpdate];
-#endif
 }
 
 #pragma mark - Status Bar -
@@ -249,9 +245,6 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
 
     // Even though we are a dark theme, leave the status bar
     // as black so it's not obvious that it's still visible during the transition
-    if (@available(iOS 13.0, *)) {
-        return UIStatusBarStyleDarkContent;
-    }
     return UIStatusBarStyleDefault;
 }
 
@@ -572,14 +565,14 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
 #pragma mark - Aspect Ratio Handling -
 - (void)showAspectRatioDialog
 {
-    if (self.cropView.aspectRatioLockEnabled) {
-        self.cropView.aspectRatioLockEnabled = NO;
-        self.toolbar.clampButtonGlowing = NO;
-        return;
-    }
+//    if (self.cropView.aspectRatioLockEnabled) {
+//        self.cropView.aspectRatioLockEnabled = NO;
+//        self.toolbar.clampButtonGlowing = NO;
+//        return;
+//    }
     
     //Depending on the shape of the image, work out if horizontal, or vertical options are required
-    BOOL verticalCropBox = self.cropView.cropBoxAspectRatioIsPortrait;
+    BOOL verticalCropBox = true;//self.cropView.cropBoxAspectRatioIsPortrait;
     
     // Get the resource bundle depending on the framework/dependency manager we're using
 	NSBundle *resourceBundle = TO_CROP_VIEW_RESOURCE_BUNDLE_FOR_OBJECT(self);
@@ -657,13 +650,13 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
             aspectRatio = CGSizeMake(3.0f, 2.0f);
             break;
         case TOCropViewControllerAspectRatioPreset5x3:
-            aspectRatio = CGSizeMake(5.0f, 3.0f);
+            aspectRatio = CGSizeMake(3.0f, 5.0f);
             break;
         case TOCropViewControllerAspectRatioPreset4x3:
             aspectRatio = CGSizeMake(4.0f, 3.0f);
             break;
         case TOCropViewControllerAspectRatioPreset5x4:
-            aspectRatio = CGSizeMake(5.0f, 4.0f);
+            aspectRatio = CGSizeMake(4.0f, 5.0f);
             break;
         case TOCropViewControllerAspectRatioPreset7x5:
             aspectRatio = CGSizeMake(7.0f, 5.0f);
@@ -676,20 +669,20 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
             break;
     }
     
-    // If the aspect ratio lock is not enabled, allow a swap
-    // If the aspect ratio lock is on, allow a aspect ratio swap
-    // only if the allowDimensionSwap option is specified.
-    BOOL aspectRatioCanSwapDimensions = !self.aspectRatioLockEnabled ||
-                                (self.aspectRatioLockEnabled && self.aspectRatioLockDimensionSwapEnabled);
-    
-    //If the image is a portrait shape, flip the aspect ratio to match
-    if (self.cropView.cropBoxAspectRatioIsPortrait &&
-        aspectRatioCanSwapDimensions)
-    {
-        CGFloat width = aspectRatio.width;
-        aspectRatio.width = aspectRatio.height;
-        aspectRatio.height = width;
-    }
+//    // If the aspect ratio lock is not enabled, allow a swap
+//    // If the aspect ratio lock is on, allow a aspect ratio swap
+//    // only if the allowDimensionSwap option is specified.
+//    BOOL aspectRatioCanSwapDimensions = !self.aspectRatioLockEnabled ||
+//                                (self.aspectRatioLockEnabled && self.aspectRatioLockDimensionSwapEnabled);
+//    
+//    //If the image is a portrait shape, flip the aspect ratio to match
+//    if (self.cropView.cropBoxAspectRatioIsPortrait &&
+//        aspectRatioCanSwapDimensions)
+//    {
+//        CGFloat width = aspectRatio.width;
+//        aspectRatio.width = aspectRatio.height;
+//        aspectRatio.height = width;
+//    }
     
     [self.cropView setAspectRatio:aspectRatio animated:animated];
 }
@@ -1132,7 +1125,6 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
 
 - (void)setAspectRatioLockDimensionSwapEnabled:(BOOL)aspectRatioLockDimensionSwapEnabled
 {
-    _aspectRatioLockDimensionSwapEnabled = aspectRatioLockDimensionSwapEnabled;
     self.cropView.aspectRatioLockDimensionSwapEnabled = aspectRatioLockDimensionSwapEnabled;
 }
 
@@ -1195,16 +1187,6 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
 - (BOOL)cancelButtonHidden
 {
     return self.toolbar.cancelButtonHidden;
-}
-
-- (BOOL)reverseContentLayout
-{
-    return self.toolbar.reverseContentLayout;
-}
-- (void)setReverseContentLayout:(BOOL)reverseContentLayout
-{
-
-    self.toolbar.reverseContentLayout = reverseContentLayout;
 }
 
 - (void)setResetAspectRatioEnabled:(BOOL)resetAspectRatioEnabled
@@ -1293,22 +1275,32 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
 - (CGFloat)statusBarHeight
 {
     CGFloat statusBarHeight = 0.0f;
-    statusBarHeight = self.view.safeAreaInsets.top;
+    if (@available(iOS 11.0, *)) {
+        statusBarHeight = self.view.safeAreaInsets.top;
 
-    // We do need to include the status bar height on devices
-    // that have a physical hardware inset, like an iPhone X notch
-    BOOL hardwareRelatedInset = self.view.safeAreaInsets.bottom > FLT_EPSILON
-                                && UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone;
+        // We do need to include the status bar height on devices
+        // that have a physical hardware inset, like an iPhone X notch
+        BOOL hardwareRelatedInset = self.view.safeAreaInsets.bottom > FLT_EPSILON
+                                    && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone;
 
-    // Always have insetting on Mac Catalyst
-    #if TARGET_OS_MACCATALYST
-    hardwareRelatedInset = YES;
-    #endif
+        // Always have insetting on Mac Catalyst
+        #if TARGET_OS_MACCATALYST
+        hardwareRelatedInset = YES;
+        #endif
 
-    // Unless the status bar is visible, or we need to account
-    // for a hardware notch, always treat the status bar height as zero
-    if (self.statusBarHidden && !hardwareRelatedInset) {
-        statusBarHeight = 0.0f;
+        // Unless the status bar is visible, or we need to account
+        // for a hardware notch, always treat the status bar height as zero
+        if (self.statusBarHidden && !hardwareRelatedInset) {
+            statusBarHeight = 0.0f;
+        }
+    }
+    else {
+        if (self.statusBarHidden) {
+            statusBarHeight = 0.0f;
+        }
+        else {
+            statusBarHeight = self.topLayoutGuide.length;
+        }
     }
     
     return statusBarHeight;
@@ -1317,8 +1309,14 @@ static const CGFloat kTOCropViewControllerToolbarHeight = 44.0f;
 - (UIEdgeInsets)statusBarSafeInsets
 {
     UIEdgeInsets insets = UIEdgeInsetsZero;
-    insets = self.view.safeAreaInsets;
-    insets.top = self.statusBarHeight;
+    if (@available(iOS 11.0, *)) {
+        insets = self.view.safeAreaInsets;
+        insets.top = self.statusBarHeight;
+    }
+    else {
+        insets.top = self.statusBarHeight;
+    }
+
     return insets;
 }
 

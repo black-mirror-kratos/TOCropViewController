@@ -1,7 +1,7 @@
 //
 //  TOCropToolbar.h
 //
-//  Copyright 2015-2024 Timothy Oliver. All rights reserved.
+//  Copyright 2015-2022 Timothy Oliver. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to
@@ -39,6 +39,8 @@
 
 @property (nonatomic, strong) UIButton *rotateButton; // defaults to counterclockwise button for legacy compatibility
 
+@property (nonatomic, assign) BOOL reverseContentLayout; // For languages like Arabic where they natively present content flipped from English
+
 @end
 
 @implementation TOCropToolbar
@@ -59,10 +61,10 @@
     
     // On iOS 9, we can use the new layout features to determine whether we're in an 'Arabic' style language mode
     if (@available(iOS 9.0, *)) {
-        _reverseContentLayout = ([UIView userInterfaceLayoutDirectionForSemanticContentAttribute:self.semanticContentAttribute] == UIUserInterfaceLayoutDirectionRightToLeft);
+        self.reverseContentLayout = ([UIView userInterfaceLayoutDirectionForSemanticContentAttribute:self.semanticContentAttribute] == UIUserInterfaceLayoutDirectionRightToLeft);
     }
     else {
-        _reverseContentLayout = [[[NSLocale preferredLanguages] objectAtIndex:0] hasPrefix:@"ar"];
+        self.reverseContentLayout = [[[NSLocale preferredLanguages] objectAtIndex:0] hasPrefix:@"ar"];
     }
     
     // Get the resource bundle depending on the framework/dependency manager we're using
@@ -341,14 +343,6 @@
     return self.clampButton.frame;
 }
 
-- (void)setReverseContentLayout:(BOOL)reverseContentLayout {
-    if (_reverseContentLayout == reverseContentLayout)
-        return;
-
-    _reverseContentLayout = reverseContentLayout;
-    [self setNeedsLayout];
-}
-
 - (void)setClampButtonHidden:(BOOL)clampButtonHidden {
     if (_clampButtonHidden == clampButtonHidden)
         return;
@@ -466,8 +460,11 @@
                        withConfiguration:[UIImageSymbolConfiguration configurationWithWeight:UIImageSymbolWeightSemibold]];
     }
 
-    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:(CGSize){17,14}];
-    UIImage *doneImage = [renderer imageWithActions:^(UIGraphicsImageRendererContext *rendererContext) {
+    UIImage *doneImage = nil;
+    
+    UIGraphicsBeginImageContextWithOptions((CGSize){17,14}, NO, 0.0f);
+    {
+        //// Rectangle Drawing
         UIBezierPath* rectanglePath = UIBezierPath.bezierPath;
         [rectanglePath moveToPoint: CGPointMake(1, 7)];
         [rectanglePath addLineToPoint: CGPointMake(6, 12)];
@@ -475,7 +472,11 @@
         [UIColor.whiteColor setStroke];
         rectanglePath.lineWidth = 2;
         [rectanglePath stroke];
-    }];
+        
+        
+        doneImage = UIGraphicsGetImageFromCurrentImageContext();
+    }
+    UIGraphicsEndImageContext();
     
     return doneImage;
 }
@@ -487,22 +488,29 @@
                        withConfiguration:[UIImageSymbolConfiguration configurationWithWeight:UIImageSymbolWeightSemibold]];
     }
 
-    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:(CGSize){16,16}];
-    UIImage *cancelImage = [renderer imageWithActions:^(UIGraphicsImageRendererContext *rendererContext) {
+    UIImage *cancelImage = nil;
+    
+    UIGraphicsBeginImageContextWithOptions((CGSize){16,16}, NO, 0.0f);
+    {
         UIBezierPath* bezierPath = UIBezierPath.bezierPath;
         [bezierPath moveToPoint: CGPointMake(15, 15)];
         [bezierPath addLineToPoint: CGPointMake(1, 1)];
         [UIColor.whiteColor setStroke];
         bezierPath.lineWidth = 2;
         [bezierPath stroke];
-
+        
+        
+        //// Bezier 2 Drawing
         UIBezierPath* bezier2Path = UIBezierPath.bezierPath;
         [bezier2Path moveToPoint: CGPointMake(1, 15)];
         [bezier2Path addLineToPoint: CGPointMake(15, 1)];
         [UIColor.whiteColor setStroke];
         bezier2Path.lineWidth = 2;
         [bezier2Path stroke];
-    }];
+        
+        cancelImage = UIGraphicsGetImageFromCurrentImageContext();
+    }
+    UIGraphicsEndImageContext();
     
     return cancelImage;
 }
@@ -515,12 +523,17 @@
                 imageWithBaselineOffsetFromBottom:4];
     }
 
-    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:(CGSize){18,21}];
-    UIImage *rotateImage = [renderer imageWithActions:^(UIGraphicsImageRendererContext *rendererContext) {
+    UIImage *rotateImage = nil;
+    
+    UIGraphicsBeginImageContextWithOptions((CGSize){18,21}, NO, 0.0f);
+    {
+        //// Rectangle 2 Drawing
         UIBezierPath* rectangle2Path = [UIBezierPath bezierPathWithRect: CGRectMake(0, 9, 12, 12)];
         [UIColor.whiteColor setFill];
         [rectangle2Path fill];
-
+        
+        
+        //// Rectangle 3 Drawing
         UIBezierPath* rectangle3Path = UIBezierPath.bezierPath;
         [rectangle3Path moveToPoint: CGPointMake(5, 3)];
         [rectangle3Path addLineToPoint: CGPointMake(10, 6)];
@@ -529,15 +542,19 @@
         [rectangle3Path closePath];
         [UIColor.whiteColor setFill];
         [rectangle3Path fill];
-
+        
+        
+        //// Bezier Drawing
         UIBezierPath* bezierPath = UIBezierPath.bezierPath;
         [bezierPath moveToPoint: CGPointMake(10, 3)];
         [bezierPath addCurveToPoint: CGPointMake(17.5, 11) controlPoint1: CGPointMake(15, 3) controlPoint2: CGPointMake(17.5, 5.91)];
         [UIColor.whiteColor setStroke];
         bezierPath.lineWidth = 1;
         [bezierPath stroke];
-    }];
-
+        rotateImage = UIGraphicsGetImageFromCurrentImageContext();
+    }
+    UIGraphicsEndImageContext();
+    
     return rotateImage;
 }
 
@@ -550,14 +567,13 @@
     }
 
     UIImage *rotateCCWImage = [self.class rotateCCWImage];
-    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:rotateCCWImage.size];
-    UIImage *rotateCWImage = [renderer imageWithActions:^(UIGraphicsImageRendererContext *rendererContext) {
-        CGContextRef context = rendererContext.CGContext;
-        CGContextTranslateCTM(context, rotateCCWImage.size.width, rotateCCWImage.size.height);
-        CGContextRotateCTM(context, M_PI);
-        CGContextDrawImage(context,CGRectMake(0,0,rotateCCWImage.size.width,rotateCCWImage.size.height),rotateCCWImage.CGImage);
-    }];
-
+    UIGraphicsBeginImageContextWithOptions(rotateCCWImage.size, NO, rotateCCWImage.scale);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextTranslateCTM(context, rotateCCWImage.size.width, rotateCCWImage.size.height);
+    CGContextRotateCTM(context, M_PI);
+    CGContextDrawImage(context,CGRectMake(0,0,rotateCCWImage.size.width,rotateCCWImage.size.height),rotateCCWImage.CGImage);
+    UIImage *rotateCWImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
     return rotateCWImage;
 }
 
@@ -569,8 +585,12 @@
                 imageWithBaselineOffsetFromBottom:0];;
     }
 
-    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:(CGSize){22,18}];
-    UIImage *resetImage = [renderer imageWithActions:^(UIGraphicsImageRendererContext *rendererContext) {
+    UIImage *resetImage = nil;
+    
+    UIGraphicsBeginImageContextWithOptions((CGSize){22,18}, NO, 0.0f);
+    {
+        
+        //// Bezier 2 Drawing
         UIBezierPath* bezier2Path = UIBezierPath.bezierPath;
         [bezier2Path moveToPoint: CGPointMake(22, 9)];
         [bezier2Path addCurveToPoint: CGPointMake(13, 18) controlPoint1: CGPointMake(22, 13.97) controlPoint2: CGPointMake(17.97, 18)];
@@ -587,7 +607,9 @@
         [bezier2Path closePath];
         [UIColor.whiteColor setFill];
         [bezier2Path fill];
-
+        
+        
+        //// Polygon Drawing
         UIBezierPath* polygonPath = UIBezierPath.bezierPath;
         [polygonPath moveToPoint: CGPointMake(5, 15)];
         [polygonPath addLineToPoint: CGPointMake(10, 9)];
@@ -596,7 +618,11 @@
         [polygonPath closePath];
         [UIColor.whiteColor setFill];
         [polygonPath fill];
-    }];
+
+
+        resetImage = UIGraphicsGetImageFromCurrentImageContext();
+    }
+    UIGraphicsEndImageContext();
     
     return resetImage;
 }
@@ -608,38 +634,46 @@
                        withConfiguration:[UIImageSymbolConfiguration configurationWithWeight:UIImageSymbolWeightSemibold]]
                 imageWithBaselineOffsetFromBottom:0];
     }
+
+    UIImage *clampImage = nil;
     
-    UIGraphicsImageRenderer *renderer = [[UIGraphicsImageRenderer alloc] initWithSize:(CGSize){22,16}];
-    UIImage *clampImage = [renderer imageWithActions:^(UIGraphicsImageRendererContext *rendererContext) {
+    UIGraphicsBeginImageContextWithOptions((CGSize){22,16}, NO, 0.0f);
+    {
         //// Color Declarations
         UIColor* outerBox = [UIColor colorWithRed: 1 green: 1 blue: 1 alpha: 0.553];
         UIColor* innerBox = [UIColor colorWithRed: 1 green: 1 blue: 1 alpha: 0.773];
-
+        
         //// Rectangle Drawing
         UIBezierPath* rectanglePath = [UIBezierPath bezierPathWithRect: CGRectMake(0, 3, 13, 13)];
         [UIColor.whiteColor setFill];
         [rectanglePath fill];
-
+        
+        
         //// Outer
         {
             //// Top Drawing
             UIBezierPath* topPath = [UIBezierPath bezierPathWithRect: CGRectMake(0, 0, 22, 2)];
             [outerBox setFill];
             [topPath fill];
-
-
+            
+            
             //// Side Drawing
             UIBezierPath* sidePath = [UIBezierPath bezierPathWithRect: CGRectMake(19, 2, 3, 14)];
             [outerBox setFill];
             [sidePath fill];
         }
-
+        
+        
         //// Rectangle 2 Drawing
         UIBezierPath* rectangle2Path = [UIBezierPath bezierPathWithRect: CGRectMake(14, 3, 4, 13)];
         [innerBox setFill];
         [rectangle2Path fill];
-    }];
-
+        
+        
+        clampImage = UIGraphicsGetImageFromCurrentImageContext();
+    }
+    UIGraphicsEndImageContext();
+    
     return clampImage;
 }
 

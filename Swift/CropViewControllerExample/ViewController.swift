@@ -55,9 +55,6 @@ class ViewController: UIViewController, CropViewControllerDelegate, UIImagePicke
         // cropController.doneButtonColor = UIColor.red
         // cropController.cancelButtonColor = UIColor.green
 
-        // Change toolbar layout direction
-        // cropController.toolbar.reverseContentLayout = true
-
         self.image = image
         
         //If profile picture, push onto the same navigation stack

@@ -1,68 +1,12 @@
 x.y.z Release Notes (yyyy-MM-dd)
 =============================================================
 
-2.7.4 Release Notes (2024-05-08)
-=============================================================
-
-## Fixed
-
-* Another invalid configuration in the privacy manifest. ([#580](https://github.com/TimOliver/TOCropViewController/pull/580))
-
-2.7.3 Release Notes (2024-04-20)
-=============================================================
-
-## Fixed
-
-* An invalid configuration in the privacy manifest. ([#576](https://github.com/TimOliver/TOCropViewController/pull/576))
-* Removed deprecated Core Graphics render APIs. ([#578](https://github.com/TimOliver/TOCropViewController/pull/578)) 
-
-2.7.2 Release Notes (2024-04-08)
-=============================================================
-
-## Added
-
-* Initial support for visionOS. ([#572](https://github.com/TimOliver/TOCropViewController/pull/572))
-
-## Fixed
-
-* A crash when tapping the aspect ratio button. ([#573](https://github.com/TimOliver/TOCropViewController/pull/573))
-
-2.7.1 Release Notes (2024-04-06)
-=============================================================
-
-## Enhancements
-
-* Added better support for Swift Concurrency. ([#563](https://github.com/TimOliver/TOCropViewController/pull/563))
-
-2.7.0 Release Notes (2024-04-06)
-=============================================================
-
-## Added
-
-* Set minimum version to iOS 11. ([#571](https://github.com/TimOliver/TOCropViewController/pull/571))
-* A `PrivacyInfo.xcprivacy` file to the resource bundle in order to be compliant with Apple's new privacy requirements. ([#569](https://github.com/TimOliver/TOCropViewController/pull/569))
-* A new aspect ratio setting of 16:6. ([#557](https://github.com/TimOliver/TOCropViewController/pull/557))
-* Ukranian localization. ([#529](https://github.com/TimOliver/TOCropViewController/pull/529))
-
-## Enhancements
-
-* Updated project for Xcode 15. ([#571](https://github.com/TimOliver/TOCropViewController/pull/571))
-* Exposed `reverseContentLayout` as an external property. ([#568](https://github.com/TimOliver/TOCropViewController/pull/568))
-* Exposed `cropView` as an external property. ([#532](https://github.com/TimOliver/TOCropViewController/pull/532))
-* Added a way to revert back to the original aspect ratio after selecting a custom ratio from the list. ([#543](https://github.com/TimOliver/TOCropViewController/pull/543))
-
-## Fixed
-
-* A deprecation warning when trying to detect the current device's idiom. (([#543](https://github.com/TimOliver/TOCropViewController/pull/543))
-* Added in a variety of properties that were available in `TOCropViewController` but not `CropViewController`. (([#541](https://github.com/TimOliver/TOCropViewController/pull/541))
-
-
 2.6.1 Release Notes (2022-01-23)
 =============================================================
 
 ## Fixed
 
-* Removed unneeded layout calculation. ([#485](https://github.com/TimOliver/TOCropViewController/pull/485))
+* Removed unneeded layaout calculation. ([#485](https://github.com/TimOliver/TOCropViewController/pull/485))
 * Incorrect accessibility label for the 'Reset' button. ([#487](https://github.com/TimOliver/TOCropViewController/pull/487))
 * Improved Japanese localization. ([#502](https://github.com/TimOliver/TOCropViewController/pull/502))
 * Fixed an API typo in the Swift interface. ([#504](https://github.com/TimOliver/TOCropViewController/pull/504))

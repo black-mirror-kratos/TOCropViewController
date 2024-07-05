@@ -52,9 +52,7 @@
 
     //cropController.rotateButtonsHidden = YES;
     //cropController.rotateClockwiseButtonHidden = NO;
-
-    //cropController.reverseContentLayout = YES;
-
+    
     //cropController.doneButtonTitle = @"Title";
     //cropController.cancelButtonTitle = @"Title";
 
@@ -75,17 +73,13 @@
     
     //If profile picture, push onto the same navigation stack
     if (self.croppingStyle == TOCropViewCroppingStyleCircular) {
-#if TARGET_OS_IOS
         if (picker.sourceType == UIImagePickerControllerSourceTypeCamera) {
             [picker dismissViewControllerAnimated:YES completion:^{
                 [self presentViewController:cropController animated:YES completion:nil];
             }];
         } else {
-#endif
             [picker pushViewController:cropController animated:YES];
-#if TARGET_OS_IOS
         }
-#endif
     }
     else { //otherwise dismiss, and then present from the main controller
         [picker dismissViewControllerAnimated:YES completion:^{
